@@ -151,17 +151,14 @@ class Daemon (object):
 		fork_exit()
 		self.silence()
 
-	def silence (self):
-		maxfd = resource.getrlimit(resource.RLIMIT_NOFILE)[1]
-		if maxfd == resource.RLIM_INFINITY:
-			maxfd = 1024
+        def silence (self):
+                #close stdin,stdout,stderr
+                for fd in range(0, 3):
+                        try:
+                                os.close(fd)
+                        except OSError:
+                                pass
 
-		for fd in range(0, maxfd):
-			try:
-				os.close(fd)
-			except OSError:
-				pass
-
-		os.open("/dev/null", os.O_RDWR)
-		os.dup2(0, 1)
-		os.dup2(0, 2)
+                null_fd = os.open("/dev/null", os.O_RDWR)
+                for fd in range(0, 3):
+                        os.dup2(null_fd, fd)
